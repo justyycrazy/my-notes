@@ -1,0 +1,85 @@
+---
+import { getCollection, getEntry, getEntries, render, type CollectionEntry } from 'astro:content';
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ArticleHeader from '../components/articles/ArticleHeader.astro';
+import ArticleBody from '../components/articles/ArticleBody.astro';
+import ArticleFooter from '../components/articles/ArticleFooter.astro';
+import Navbar from '../components/sections/Navbar.astro';
+
+import type { BlogPosting, WithContext } from 'schema-dts';
+
+import { SITE_TITLE, DEFAULT_AUTHOR } from '../consts';
+import { getYMD } from '../utils/date';
+import { getPostURL } from '../utils/url';
+
+export async function getStaticPaths() {
+	const posts = (await Promise.all([
+		getCollection('pending'),
+		getCollection('published'),
+	])).flat();
+
+	const seen = new Map<string, CollectionEntry<'pending' | 'published'>>();
+	for (const post of posts) {
+		const slug = post.data.slug;
+		const existing = seen.get(slug);
+		if (existing && existing.collection !== 'published' && post.collection === 'published') {
+			console.warn(`[slug.astro] Slug "${slug}" found in both pending and published; published takes priority, pending entry is overridden.`);
+			seen.set(slug, post);
+		} else if (!existing) {
+			seen.set(slug, post);
+		} else {
+			console.warn(`[slug.astro] Duplicate slug "${slug}" in ${existing.collection} and ${post.collection}; keeping first.`);
+		}
+	}
+	return [...seen.values()].map((post) => ({
+		params: { slug: post.data.slug },
+		props: { post },
+	}));
+}
+
+const { post } = Astro.props;
+
+const { title, description, author, createTime, updateTime, slug, category, tags } = post.data;
+const cleanDescription = description?.trim().replace(/\s+/g, ' ');
+const { Content } = await render(post);
+
+const articleSchema: WithContext<BlogPosting> = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  ...(cleanDescription ? { description: cleanDescription } : {}),
+  datePublished: createTime.toISOString(),
+  dateModified: updateTime.toISOString(),
+  author: {
+    '@type': 'Person',
+    name: author || DEFAULT_AUTHOR,
+  },
+  url: getPostURL(slug),
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': getPostURL(slug),
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: SITE_TITLE,
+    url: Astro.site?.href || 'https://www.yycrazy.net',
+  },
+  articleSection: typeof category === 'string' ? category : (await getEntry(category))?.data.title,
+  keywords: (await getEntries(tags ?? [])).map((t) => t.data.title).join(', '),
+};
+---
+
+  <BaseLayout ogTitle={title} ogDescription={cleanDescription} ogType="article" jsonLd={articleSchema} canonical={getPostURL(slug)}>
+	<div class="min-h-screen flex flex-col">
+		<Navbar />
+
+<ArticleHeader title={title} author={author} date={getYMD(createTime)} />
+<ArticleBody>
+  <Content />
+</ArticleBody>
+<ArticleFooter />
+
+	</div>
+</BaseLayout>
+

@@ -1,0 +1,105 @@
+---
+import '../styles/global.css';
+import 'katex/dist/katex.min.css';
+import themeScriptUrl from '../assets/scripts/theme.js?url';
+import ogShareImageUrl from '../assets/images/og-share.jpg?url';
+
+import Unfont from 'unplugin-fonts/astro/component.astro';
+import { SEO } from 'astro-seo';
+import { Schema } from 'astro-seo-schema';
+import type { Thing, WithContext } from 'schema-dts';
+
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { getFullURL } from '../utils/url';
+import { ClientRouter } from 'astro:transitions';
+
+import PaperBackground from '../components/effects/PaperBackground.astro';
+import ThemeToggleSeal from '../components/decorations/ThemeToggleSeal.astro';
+import Footer from '../components/sections/Footer.astro';
+
+interface Props {
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  ogType?: string;
+  jsonLd?: WithContext<Thing>;
+  canonical?: string;
+}
+
+const { ogTitle = SITE_TITLE, ogDescription = SITE_DESCRIPTION, ogImage = ogShareImageUrl, ogType = 'website', jsonLd, canonical } = Astro.props;
+
+const canonicalUrl = canonical ? new URL(canonical, Astro.site).href : undefined;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <!-- 防止首次加载闪烁：在 JS 执行前根据系统偏好设置背景色 -->
+        <style>
+            @media (prefers-color-scheme: dark) {
+                html:not([data-theme]) body { background-color: #1a1614; color: #e8dcc8; }
+            }
+            @media (prefers-color-scheme: light) {
+                html:not([data-theme]) body { background-color: #f4ede0; color: #1c1c1c; }
+            }
+        </style>
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Security-Policy"
+              content="default-src 'self';
+                       script-src 'self' 'unsafe-inline';
+                       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                       font-src 'self' data: https://fonts.gstatic.com;
+                       img-src 'self' data:;
+                       connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com;" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Unfont />
+        <noscript>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Zhi+Mang+Xing:wght@400&display=swap" />
+        </noscript>
+        <SEO
+          title={ogTitle}
+          description={ogDescription}
+          canonical={canonicalUrl}
+          openGraph={ogImage ? {
+            basic: {
+              title: ogTitle,
+              type: ogType,
+              url: canonicalUrl,
+              image: new URL(ogImage, Astro.site).href,
+            },
+            optional: {
+              description: ogDescription,
+              locale: 'zh_CN',
+              siteName: SITE_TITLE,
+            },
+          } : undefined}
+          extend={{
+            meta: [
+              { name: 'generator', content: Astro.generator },
+            ],
+          }}
+        />
+
+        {jsonLd && <Schema item={jsonLd} />}
+
+        <link rel="icon" type="image/png" href={getFullURL('/static/favicons/', 'favicon-96x96.png', '')} sizes="96x96" />
+        <link rel="icon" type="image/svg+xml" href={getFullURL('/static/favicons/', 'favicon.svg', '')} />
+        <link rel="shortcut icon" href={getFullURL('/static/favicons/', 'favicon.ico', '')} />
+        <link rel="apple-touch-icon" sizes="180x180" href={getFullURL('/static/favicons/', 'apple-touch-icon.png', '')} />
+        <meta name="apple-mobile-web-app-title" content="荒田半亩" />
+        <link rel="manifest" href={getFullURL('/static/', 'site.webmanifest', '')} />
+        <script is:inline>
+            (function(){var t;try{var e=localStorage.getItem("theme");if("dark"===e||"light"===e)t=e}catch(t){}t=t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",t)})();
+        </script>
+        <script is:inline src={themeScriptUrl}></script>
+        <ClientRouter />
+    </head>
+    <body>
+        <PaperBackground />
+        <ThemeToggleSeal text="夜" size={48} variant="square" />
+
+        <slot />
+
+	    <Footer />
+    </body>
+</html>

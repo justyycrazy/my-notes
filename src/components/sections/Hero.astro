@@ -1,0 +1,52 @@
+---
+import { Image } from 'astro:assets';
+import FadeInSection from '../effects/FadeInSection.astro';
+import Seal from '../decorations/Seal.astro';
+import avatarImg from '../../assets/images/avatar.jpg';
+---
+
+	<section transition:name="hero" class="pt-[20vh] flex flex-col items-center text-center">
+	<FadeInSection>
+		<div
+			class="ink-avatar-wrap relative mx-auto overflow-hidden"
+			style="width: 120px; height: 120px; border-radius: 48% 52% 51% 49% / 52% 48% 53% 47%; background-color: var(--avatar-wrap-bg);"
+		>
+			<div
+				class="ink-avatar-core absolute inset-0"
+				style="background: var(--avatar-core-bg); filter: blur(0.5px);"
+			/>
+			<div
+				class="absolute"
+				style="inset: -10px; background: radial-gradient(ellipse at 55% 58%, transparent 40%, var(--color-hero-veil-strong) 65%, var(--color-hero-veil-soft) 80%, transparent 90%); filter: blur(2px);"
+			/>
+			<Image
+				src={avatarImg}
+				alt="头像"
+				widths={[120, 240, 480]}
+				sizes="120px"
+				class="ink-avatar-img absolute inset-0 w-full h-full object-cover"
+				style="mix-blend-mode: var(--avatar-img-blend); opacity: var(--avatar-img-opacity); border-radius: inherit;"
+			/>
+		</div>
+	</FadeInSection>
+
+	<FadeInSection class="mt-6">
+		<Seal text="狂士颜晏" size={56} vertical={true} fontScale={1.3} />
+	</FadeInSection>
+
+	<FadeInSection class="mt-4">
+		<p
+			class="text-sm md:text-base tracking-widest text-ink-light"
+		>
+			伪程序员 · 梭哈爱好者
+		</p>
+	</FadeInSection>
+
+	<FadeInSection class="mt-8 max-w-md mx-auto">
+		<p
+			class="text-base md:text-lg leading-relaxed text-ink-light"
+		>
+			本当缀以华章，炫才弄墨，奈何神思倦怠，懒于执笔。
+		</p>
+	</FadeInSection>
+</section>

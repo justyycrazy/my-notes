@@ -1,0 +1,33 @@
+---
+import { getCollection } from 'astro:content';
+import type { WebSite, WithContext } from 'schema-dts';
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/sections/Hero.astro';
+import RecentPosts from '../components/sections/RecentPosts.astro';
+import Contact from '../components/sections/Contact.astro';
+
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { getFullURL } from '../utils/url';
+
+const published = await getCollection('published');
+const latestPosts = published
+	.sort((a, b) => b.data.createTime.getTime() - a.data.createTime.getTime())
+	.slice(0, 3);
+
+const websiteSchema: WithContext<WebSite> = {
+	'@context': 'https://schema.org',
+	'@type': 'WebSite',
+	name: SITE_TITLE,
+	description: SITE_DESCRIPTION,
+	url: getFullURL('/', '', ''),
+};
+---
+
+  <BaseLayout jsonLd={websiteSchema} canonical={getFullURL('/', '', '')}>
+	<main class="mx-auto max-w-3xl px-6 md:px-8 relative">
+		<Hero />
+		<RecentPosts posts={latestPosts} />
+		<Contact />
+	</main>
+</BaseLayout>

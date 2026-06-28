@@ -1,0 +1,65 @@
+---
+interface Props {
+    orientation: "vertical" | "horizontal";
+    width?: string;
+    height?: string;
+}
+
+const { orientation, width, height } = Astro.props;
+const isVertical = orientation === "vertical";
+
+const h = isVertical ? (height ?? "48") : undefined;
+const w = !isVertical ? (width ?? "100%") : undefined;
+
+const isPercentHeight = typeof h === "string" && h.endsWith("%");
+// 百分比模式：用固定 viewBox (0 0 3 100) + preserveAspectRatio="none" 让 SVG 拉伸填满容器，
+// 避免无 viewBox 时浏览器回退到默认高度（约 150px）导致竖线远高于实际内容。
+const verticalViewBox = isVertical ? (isPercentHeight ? "0 0 3 100" : `0 0 3 ${h}`) : undefined;
+const verticalLineEnd = isVertical ? (isPercentHeight ? "100" : h) : undefined;
+---
+
+{isVertical && (
+    <svg
+        width="3"
+        height={h}
+        viewBox={verticalViewBox}
+        {...isPercentHeight && { preserveAspectRatio: "none" }}
+        class="inline-block shrink-0 text-ink"
+        aria-hidden="true"
+    >
+        <line
+            x1="1.5"
+            y1="0"
+            x2="1.5"
+            y2={verticalLineEnd}
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-dasharray="8 4 6 3 10 2"
+            opacity="0.6"
+            {...isPercentHeight && { "vector-effect": "non-scaling-stroke" }}
+        />
+    </svg>
+)}
+
+{!isVertical && (
+    <svg
+        width={w}
+        height="2"
+        viewBox="0 0 100 2"
+        preserveAspectRatio="none"
+        class="block text-divider"
+        aria-hidden="true"
+    >
+        <line
+            x1="0"
+            y1="1"
+            x2="100"
+            y2="1"
+            stroke="currentColor"
+            stroke-width="1"
+            stroke-dasharray="8 4 6 3 10 2"
+            opacity="0.6"
+            vector-effect="non-scaling-stroke"
+        />
+    </svg>
+)}

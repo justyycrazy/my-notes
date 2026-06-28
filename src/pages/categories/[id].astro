@@ -1,0 +1,53 @@
+---
+import { getCollection } from 'astro:content';
+import ListLayout from '../../layouts/ListLayout.astro';
+import { getDescendantIds, getCategoryId } from '../../utils/category';
+import { getFullURL, getPostURL } from '../../utils/url';
+import type { CollectionPage, WithContext } from 'schema-dts';
+export async function getStaticPaths() {
+  const [categories, published] = await Promise.all([
+    getCollection('categories'),
+    getCollection('published'),
+  ]);
+  return categories.map((cat) => ({
+    params: { id: cat.id },
+    props: { category: cat, published },
+  }));
+}
+
+const { category, published } = Astro.props;
+
+const descendantIds = await getDescendantIds(category.id);
+
+const categoryPosts = published
+  .filter((post) => {
+    return descendantIds.includes(getCategoryId(post.data.category));
+  })
+  .sort((a, b) => b.data.createTime.getTime() - a.data.createTime.getTime());
+
+const categoryUrl = getFullURL('/categories/', category.id, '.html');
+const categorySchema: WithContext<CollectionPage> = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: category.data.title,
+  url: categoryUrl,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: categoryPosts.map((post, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: getPostURL(post.data.slug),
+      name: post.data.title,
+    })),
+  },
+};
+---
+
+  <ListLayout
+  title={category.data.title}
+  count={categoryPosts.length}
+  posts={categoryPosts}
+  emptyMessage="此卷尚无片文，盼添雅辞华章"
+  canonical={categoryUrl}
+  jsonLd={categorySchema}
+/>

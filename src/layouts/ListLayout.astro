@@ -1,0 +1,134 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Navbar from '../components/sections/Navbar.astro';
+import FadeInSection from '../components/effects/FadeInSection.astro';
+import InkDivider from '../components/decorations/InkDivider.astro';
+import PostCard from '../components/articles/PostCard.astro';
+import { getEntries, type CollectionEntry, type ReferenceDataEntry } from 'astro:content';
+import type { Thing, WithContext } from 'schema-dts';
+
+interface Props {
+  title: string;
+  count: number;
+  posts: CollectionEntry<'published'>[];
+  emptyMessage?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  canonical?: string;
+  jsonLd?: WithContext<Thing>;
+}
+
+const { title, count, posts, emptyMessage = '撰集未存片文，盼添雅辞华章', ogTitle, ogDescription, ogImage, canonical, jsonLd } = Astro.props;
+
+// 分成两列
+const splitCount = Math.ceil(count / 2);
+const leftPosts = posts.slice(0, splitCount);
+const rightPosts = posts.slice(splitCount, count);
+
+// Batch-resolve all tags in one call (avoids N+1)
+const allPosts = [...leftPosts, ...rightPosts];
+const seen = new Set<string>();
+const uniqueTagRefs: ReferenceDataEntry<'tags'>[] = [];
+
+for (const post of allPosts) {
+  for (const tag of (post.data.tags ?? [])) {
+    const id = tag.id;
+    if (!seen.has(id)) {
+      seen.add(id);
+      uniqueTagRefs.push(tag);
+    }
+  }
+}
+
+const allTagEntries = await getEntries(uniqueTagRefs);
+const tagMap = new Map(allTagEntries.map((e) => [e.id, e]));
+
+const resolveTags = (tags: CollectionEntry<'published'>['data']['tags']) =>
+  (tags ?? [])
+    .map((t) => tagMap.get(t.id))
+    .filter((t): t is CollectionEntry<'tags'> => t !== undefined);
+
+const resolvedLeftTags = leftPosts.map((p) => resolveTags(p.data.tags));
+const resolvedRightTags = rightPosts.map((p) => resolveTags(p.data.tags));
+---
+
+  <BaseLayout ogTitle={ogTitle} ogDescription={ogDescription} ogImage={ogImage} canonical={canonical} jsonLd={jsonLd}>
+  <div class="min-h-screen flex flex-col">
+    <Navbar />
+
+  <main class="flex-1 mx-auto w-full max-w-5xl px-6 md:px-8 py-12 md:py-16">
+    <!-- Page title -->
+    <FadeInSection>
+      <div class="flex items-center gap-4 mb-12">
+        <InkDivider orientation="vertical" height="40" />
+	        <h1
+	          class="text-2xl md:text-3xl font-black font-serif tracking-[0.1em] text-ink"
+	        >
+          {title}
+        </h1>
+        <span
+          class="text-xs font-serif ms-2 text-cinnabar/75"
+        >
+          共撰 {count} 篇
+        </span>
+      </div>
+    </FadeInSection>
+
+    {count === 0 ? (
+      <FadeInSection>
+        <p
+          class="text-sm text-center py-12 font-serif text-ink-light/65"
+        >
+          {emptyMessage}
+        </p>
+      </FadeInSection>
+    ) : (
+      <div class="flex flex-col md:flex-row md:items-start gap-8 md:gap-0">
+        <!-- Left column + center divider wrapper -->
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 md:gap-0">
+          <!-- Left column -->
+          <div class="flex flex-col gap-0" data-left-column>
+            {
+              leftPosts.map((post, index) => (
+                <PostCard
+                  post={post}
+                  resolvedTags={resolvedLeftTags[index]}
+                  isLast={index === leftPosts.length - 1}
+                />
+              ))
+            }
+          </div>
+
+          <!-- Center divider (desktop) -->
+          <div class="hidden md:flex items-center justify-center px-6" style="contain: size;" data-center-divider>
+            <InkDivider orientation="vertical" height="100%" />
+          </div>
+          <!-- Horizontal divider (mobile) -->
+          <div class="md:hidden">
+            <InkDivider orientation="horizontal" width="100%" />
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="flex-1 flex flex-col gap-0">
+          {
+            rightPosts.map((post, index) => (
+              <PostCard
+                post={post}
+                resolvedTags={resolvedRightTags[index]}
+                isLast={index === rightPosts.length - 1}
+              />
+            ))
+          }
+        </div>
+      </div>
+    )}
+  </main>
+
+  </div>
+
+</BaseLayout>
+
+
+

@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getFullURL } from '../utils/url';
+
+import Seal from '../components/decorations/Seal.astro';
+import InkDivider from '../components/decorations/InkDivider.astro';
+---
+
+  <BaseLayout canonical={getFullURL('/', '404', '.html')}>
+    <!-- 水墨晕染 — 右上 -->
+    <div
+        class="fixed pointer-events-none"
+        style="top: -15%; right: -10%; width: 60vw; height: 60vh; background: radial-gradient(ellipse at 55% 45%, var(--color-ink-veil-strong) 0%, var(--color-ink-veil-medium) 35%, var(--color-ink-veil-soft) 60%, transparent 75%); filter: blur(40px); z-index: -2;"
+    ></div>
+
+    <!-- 水墨晕染 — 左下 -->
+    <div
+        class="fixed pointer-events-none"
+        style="bottom: -20%; left: -15%; width: 55vw; height: 55vh; background: radial-gradient(ellipse at 40% 55%, var(--color-ink-veil-strong) 0%, var(--color-ink-veil-medium) 40%, var(--color-ink-veil-soft) 65%, transparent 80%); filter: blur(50px);"
+    ></div>
+
+    <!-- 主内容 -->
+    <main class="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
+        <h1
+            class="font-serif font-black text-9xl leading-none select-none text-ink opacity-15 tracking-[0.15em]"
+            style="text-shadow: 0 0 60px var(--color-ink-veil-strong);"
+        >
+            404
+        </h1>
+
+        <!-- 诗句 -->
+        <div class="mt-12 text-center">
+            <p
+                class="text-base md:text-lg leading-loose font-serif text-ink-light opacity-70 tracking-[0.15em]"
+            >
+                寻幽不知处，误入迷林中
+            </p>
+            <p
+                class="text-base md:text-lg leading-loose font-serif mt-1 text-ink-light opacity-70 tracking-[0.15em]"
+            >
+                云深无进路，且乘轻风返
+            </p>
+        </div>
+
+        <!-- 印章 -->
+        <div class="mt-10 -rotate-3">
+            <Seal text="迷" size={48} variant="casual" fontScale={1.1} />
+        </div>
+
+        <!-- 墨线分隔 -->
+        <div class="mt-10 w-24">
+            <InkDivider orientation="horizontal" width="100%" />
+        </div>
+
+        <!-- 返回按钮 -->
+        <a
+            href={import.meta.env.BASE_URL}
+            class="return-btn mt-10 px-8 py-2.5 text-sm font-serif tracking-widest inline-block text-center"
+        >
+            归去来兮
+        </a>
+    </main>
+</BaseLayout>
+<style>
+    .return-btn {
+        color: var(--color-ink);
+        border: 1px dashed var(--color-ink);
+        border-radius: 0;
+        background: transparent;
+        opacity: 0.7;
+        transition: all 500ms ease;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .return-btn:hover {
+        background: var(--color-ink);
+        color: var(--color-paper);
+        opacity: 1;
+    }
+</style>

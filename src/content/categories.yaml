@@ -1,0 +1,8 @@
+my-category:
+    title: "My Category"
+    order: 1
+
+my-sub-category:
+    title: "My Sub Category"
+    order: 1
+    parent: my-category

@@ -1,0 +1,135 @@
+---
+interface Props {
+    text: string;
+    size?: number;
+    variant?: "square" | "casual" | "irregular";
+    vertical?: boolean;
+    fontScale?: number;
+    class?: string;
+}
+
+const { text, size = 56, variant = "square", vertical = false, fontScale = 1, class: className = '' } = Astro.props;
+const SEAL_FONT = "var(--font-brush)";
+
+const chars = text.split("");
+const needsVertical = vertical && chars.length > 1;
+const charsPerColumn = needsVertical ? Math.ceil(chars.length / 2) : 0;
+const colCount = needsVertical ? Math.ceil(chars.length / charsPerColumn) : 0;
+const colWidth = needsVertical ? size / (colCount + 0.5) : 0;
+const rowHeight = needsVertical ? size / (charsPerColumn + 0.5) : 0;
+
+const textElements = needsVertical
+    ? chars.map((char, i) => {
+            const colIndex = colCount - 1 - Math.floor(i / charsPerColumn);
+            const rowIndex = i % charsPerColumn;
+            return {
+                char,
+                x: colWidth * (colIndex + 0.75),
+                y: rowHeight * (rowIndex + 0.7),
+                fontSize: colWidth * 0.72 * fontScale,
+            };
+        })
+    : null;
+
+const singleFontSize = size * 0.42 * fontScale;
+---
+
+<svg
+    width={size}
+    height={size}
+    viewBox={`0 0 ${size} ${size}`}
+    class={`seal seal-${variant} inline-block origin-center ${className}`}
+    aria-hidden="true"
+>
+    {variant === "casual" && (
+        <>
+            <path
+                class="border"
+                d={`M4,6 Q${size * 0.3},2 ${size * 0.6},4 Q${size - 4},3 ${size - 6},8 Q${size - 2},${size * 0.5} ${size - 5},${size - 6} Q${size * 0.5},${size - 2} 6,${size - 4} Q2,${size * 0.6} 4,6 Z`}
+                fill="var(--color-cinnabar)"
+                stroke="var(--color-cinnabar-dark)"
+                stroke-width="1"
+            />
+            <g class="-rotate-3 origin-center">
+                {needsVertical && textElements ? (
+                    textElements.map(({ char, x, y, fontSize }) => (
+                        <text data-seal-text x={x} y={y} dominant-baseline="central" text-anchor="middle" fill="var(--color-paper)" font-size={fontSize} font-family={SEAL_FONT}>
+                            {char}
+                        </text>
+                    ))
+                ) : (
+                    <text data-seal-text x="50%" y="52%" dominant-baseline="central" text-anchor="middle" fill="var(--color-paper)" font-size={singleFontSize} font-family={SEAL_FONT}>
+                        {text}
+                    </text>
+                )}
+            </g>
+        </>
+    )}
+
+    {variant === "irregular" && (
+        <>
+            <path
+                class="border"
+                d={`M${size * 0.15},8 C${size * 0.05},${size * 0.2} 4,${size * 0.4} 8,${size * 0.6} C6,${size * 0.8} ${size * 0.2},${size - 6} ${size * 0.4},${size - 4} C${size * 0.6},${size - 8} ${size * 0.8},${size - 6} ${size - 8},${size * 0.7} C${size - 4},${size * 0.5} ${size - 6},${size * 0.3} ${size - 10},${size * 0.15} C${size * 0.8},6 ${size * 0.6},4 ${size * 0.4},6 C${size * 0.25},4 ${size * 0.2},6 ${size * 0.15},8 Z`}
+                fill="var(--color-cinnabar)"
+                stroke="var(--color-cinnabar-dark)"
+                stroke-width="1"
+            />
+            {needsVertical && textElements ? (
+                textElements.map(({ char, x, y, fontSize }) => (
+                    <text data-seal-text x={x} y={y} dominant-baseline="central" text-anchor="middle" fill="var(--color-paper)" font-size={fontSize} font-family={SEAL_FONT}>
+                        {char}
+                    </text>
+                ))
+            ) : (
+                <text data-seal-text x="50%" y="52%" dominant-baseline="central" text-anchor="middle" fill="var(--color-paper)" font-size={singleFontSize} font-family={SEAL_FONT}>
+                    {text}
+                </text>
+            )}
+        </>
+    )}
+
+    {variant === "square" && (
+        <>
+            <rect class="border" x="1" y="1" width={size - 2} height={size - 2} rx="2" fill="var(--color-cinnabar)" stroke="var(--color-cinnabar-dark)" stroke-width="1" />
+            <rect x="5" y="5" width={size - 10} height={size - 10} rx="1" fill="none" stroke="var(--color-cinnabar-dark)" stroke-width="0.5" opacity="0.5" />
+            {needsVertical && textElements ? (
+                textElements.map(({ char, x, y, fontSize }) => (
+                    <text data-seal-text x={x} y={y} dominant-baseline="central" text-anchor="middle" fill="var(--color-paper)" font-size={fontSize} font-family={SEAL_FONT}>
+                        {char}
+                    </text>
+                ))
+            ) : (
+                <text data-seal-text x="50%" y="52%" dominant-baseline="central" text-anchor="middle" fill="var(--color-paper)" font-size={singleFontSize} font-family={SEAL_FONT}>
+                    {text}
+                </text>
+            )}
+            <path d={`M3,3 L8,3 L3,8 Z`} fill="var(--color-paper)" opacity="0.3" />
+            <path d={`M${size - 3},3 L${size - 8},3 L${size - 3},8 Z`} fill="var(--color-paper)" opacity="0.3" />
+            <path d={`M3,${size - 3} L8,${size - 3} L3,${size - 8} Z`} fill="var(--color-paper)" opacity="0.3" />
+            <path d={`M${size - 3},${size - 3} L${size - 8},${size - 3} L${size - 3},${size - 8} Z`} fill="var(--color-paper)" opacity="0.3" />
+        </>
+    )}
+</svg>
+
+<style>
+    .seal {
+        transition: transform 500ms ease, filter 500ms ease;
+    }
+    .seal:hover {
+        transform: scale(1.05);
+    }
+    .seal-casual:hover {
+        transform: rotate(-1deg) scale(1.05);
+    }
+    .seal-square:hover,
+    .seal-irregular:hover {
+        transform: rotate(2deg) scale(1.05);
+    }
+    .seal .border {
+        transition: fill 500ms ease;
+    }
+    .seal:hover .border {
+        fill: var(--color-cinnabar-dark);
+    }
+</style>

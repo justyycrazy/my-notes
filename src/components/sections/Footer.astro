@@ -1,0 +1,46 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="py-12 md:py-16 text-center flex flex-col items-center gap-5">
+    <!-- Ink divider -->
+    <div class="w-12 h-px mx-auto bg-divider"></div>
+
+    <!-- Copyright + Beian -->
+    <div class="flex flex-col items-center text-xs text-ink-light">
+        <!-- Copyright -->
+        <p class="opacity-35">
+            Copyright &copy;2011~{currentYear} YYCrazy.Net All Rights Reserved.
+        </p>
+
+        <!-- Beian — tight gap -->
+        <div class="flex flex-col md:flex-row items-center gap-0 md:gap-0 mt-0.5 opacity-30">
+            <a
+                href="https://beian.miit.gov.cn/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="beian-link"
+            >
+                闽ICP备2020017204号-1
+            </a>
+            <span class="hidden md:inline mx-2 opacity-40">·</span>
+            <a
+                href="http://www.beian.gov.cn/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="beian-link"
+            >
+                闽公网安备35021102000809号
+            </a>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .beian-link {
+        transition: opacity 300ms ease;
+    }
+    .beian-link:hover {
+        opacity: 0.6;
+    }
+</style>

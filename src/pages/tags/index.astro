@@ -1,0 +1,175 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Navbar from '../../components/sections/Navbar.astro';
+import InkDivider from '../../components/decorations/InkDivider.astro';
+import FadeInSection from '../../components/effects/FadeInSection.astro';
+import { getFullURL } from '../../utils/url';
+import type { BreadcrumbList, WithContext } from 'schema-dts';
+
+// 从 tags.yaml 读取所有标签
+const allTags = await getCollection('tags');
+
+// 读取已发布文章
+const published = await getCollection('published');
+
+// 单次扫描统计每个标签的文章数
+const tagCounts = new Map<string, number>();
+for (const post of published) {
+  for (const t of post.data.tags ?? []) {
+    tagCounts.set(t.id, (tagCounts.get(t.id) ?? 0) + 1);
+  }
+}
+
+// 过滤文章数为 0 的标签，按 count 降序
+const tags = allTags
+  .map((tag) => ({ id: tag.id, name: tag.data.title, count: tagCounts.get(tag.id) ?? 0 }))
+  .filter((tag) => tag.count > 0)
+  .sort((a, b) => b.count - a.count);
+
+// 根据数量决定样式变体
+function getVariant(count: number): 'seal' | 'ink' | 'faint' {
+  if (count > 10) return 'seal';
+  if (count >= 5) return 'ink';
+  return 'faint';
+}
+
+const breadcrumbSchema: WithContext<BreadcrumbList> = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: '首页',
+      item: getFullURL('/', 'index', '.html'),
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: '印记',
+      item: getFullURL('/tags/', 'index', '.html'),
+    },
+  ],
+};
+---
+  <BaseLayout canonical={getFullURL('/tags/', 'index', '.html')} jsonLd={breadcrumbSchema}>
+  <div class="min-h-screen flex flex-col">
+    <Navbar />
+
+  <main class="flex-1 mx-auto w-full max-w-4xl px-6 md:px-8 py-16 md:py-24">
+    <!-- Header -->
+    <header class="text-center mb-6">
+      <h1
+        class="text-6xl font-black font-serif text-ink tracking-[0.1em]"
+      >
+        印记
+      </h1>
+      <p
+        class="mt-6 text-base md:text-lg font-serif leading-relaxed max-w-lg mx-auto text-ink-light/70"
+      >
+        字字句句，落纸为痕。轻触印记，可观同源之文。
+      </p>
+    </header>
+
+    <!-- Divider -->
+    <div class="flex justify-center mb-16">
+      <div class="w-32">
+        <InkDivider orientation="horizontal" width="100%" />
+      </div>
+    </div>
+
+    <FadeInSection>
+      <!-- Tag cloud -->
+      <div class="tag-cloud flex flex-wrap justify-center items-baseline">
+        {
+          tags.map((tag) => {
+            const variant = getVariant(tag.count);
+            return (
+              <a
+                href={getFullURL('/tags/', tag.id, '.html')}
+                class={`tag-item tag-${variant}`}
+                data-count={tag.count}
+              >
+                {tag.name}
+              </a>
+            );
+          })
+        }
+      </div>
+
+      <!-- Empty state -->
+      {
+        tags.length === 0 && (
+          <p class="text-center text-sm font-serif text-ink-light/65">
+            暂无印记
+          </p>
+        )
+      }
+    </FadeInSection>
+  </main>
+  </div>
+</BaseLayout>
+
+<style>
+  .tag-cloud {
+    gap: 1.5rem 2rem;
+  }
+
+  /* ─── Seal variant (count > 10) ─── */
+  .tag-seal {
+    display: inline-block;
+    background-color: var(--color-cinnabar);
+    color: var(--color-paper);
+    border: 1px solid var(--color-cinnabar);
+    padding: 0.35em 0.7em;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    transform: rotate(-2deg);
+    opacity: 0.85;
+    text-decoration: none;
+    transition: all 300ms ease;
+  }
+  .tag-seal:hover {
+    opacity: 1;
+    transform: rotate(0deg) scale(1.05);
+  }
+
+  /* ─── Ink variant (count >= 5) ─── */
+  .tag-ink {
+    display: inline-block;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    color: var(--color-ink);
+    font-size: 1.5rem;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 0.15em;
+    text-decoration: none;
+    transition: all 300ms ease;
+  }
+  .tag-ink:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    border-bottom-color: var(--color-cinnabar);
+  }
+
+  /* ─── Faint variant (count < 5) ─── */
+  .tag-faint {
+    display: inline-block;
+    font-family: var(--font-serif);
+    color: var(--color-ink-light);
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+    text-decoration: none;
+    transition: all 300ms ease;
+  }
+  .tag-faint:hover {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+</style>

@@ -1,0 +1,92 @@
+---
+import Seal from './Seal.astro';
+
+interface Props {
+    text?: string;
+    size?: number;
+    variant?: "square" | "casual" | "irregular";
+    vertical?: boolean;
+    fontScale?: number;
+}
+
+const { 
+    text = "夜", 
+    size = 48, 
+    variant = "square", 
+    vertical = false, 
+    fontScale = 1 
+} = Astro.props;
+---
+
+<button
+    type="button"
+    class="fixed bottom-6 right-6 z-50 rounded-full p-2 cursor-pointer border-0 leading-none bg-paper/60 backdrop-blur-sm transition-transform duration-300 hover:scale-110 active:scale-95"
+    aria-label="切换模式"
+    aria-pressed="false"
+    data-theme-toggle
+>
+    <Seal text={text} size={size} variant={variant} vertical={vertical} fontScale={fontScale} />
+</button>
+
+<script is:inline>
+(function() {
+    var STORAGE_KEY = "theme";
+    var THEMES = { light: "light", dark: "dark" };
+
+    function getSystemTheme() {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? THEMES.dark : THEMES.light;
+    }
+
+    function syncSealText(theme) {
+        var label = theme === THEMES.dark ? '昼' : '夜';
+        document.querySelectorAll("[data-theme-toggle] [data-seal-text]").forEach(function (el) {
+            el.textContent = label;
+        });
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+            btn.setAttribute("aria-pressed", String(theme === THEMES.dark));
+        });
+        syncSealText(theme);
+    }
+
+    function makeToggleHandler() {
+        return function toggleTheme() {
+            var current = document.documentElement.getAttribute("data-theme") || getSystemTheme();
+            var next = current === THEMES.dark ? THEMES.light : THEMES.dark;
+            applyTheme(next);
+            localStorage.setItem(STORAGE_KEY, next);
+        };
+    }
+
+    // 初始化按钮：绑定事件 + 同步 aria-pressed 和文案到当前主题
+    function bindButton(btn) {
+        btn.addEventListener("click", makeToggleHandler());
+        var current = document.documentElement.getAttribute("data-theme");
+        if (current) {
+            btn.setAttribute("aria-pressed", String(current === THEMES.dark));
+            syncSealText(current);
+        }
+    }
+
+    // astro:page-load 在首屏加载和后续 View Transitions 导航时都会触发，
+    // 一个监听器即可覆盖所有场景，避免双重绑定导致点击无效。
+    document.addEventListener("astro:page-load", function () {
+        document.querySelectorAll("[data-theme-toggle]").forEach(bindButton);
+    });
+
+    // astro:after-swap 在 View Transition DOM 交换后立即触发，
+    // 确保印章文案（"夜"/"昼"）与 ARIA 状态在切页后同步。
+    document.addEventListener("astro:after-swap", function () {
+        var current = document.documentElement.getAttribute("data-theme");
+        if (current) {
+            document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+                btn.setAttribute("aria-pressed", String(current === THEMES.dark));
+                syncSealText(current);
+            });
+        }
+    });
+})();
+</script>

@@ -1,0 +1,36 @@
+---
+import { getCollection } from 'astro:content';
+import ListLayout from '../layouts/ListLayout.astro';
+import { getFullURL, getPostURL } from '../utils/url';
+import type { CollectionPage, WithContext } from 'schema-dts';
+const published = await getCollection('published');
+const allPosts = published.sort(
+  (a, b) => b.data.createTime.getTime() - a.data.createTime.getTime()
+);
+
+const archivesUrl = getFullURL('/', 'archives', '.html');
+const archivesSchema: WithContext<CollectionPage> = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: '全撰',
+  url: archivesUrl,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: allPosts.map((post, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: getPostURL(post.data.slug),
+      name: post.data.title,
+    })),
+  },
+};
+---
+
+  <ListLayout
+  title="全撰"
+  count={allPosts.length}
+  posts={allPosts}
+  emptyMessage="撰集未存片文，盼添雅辞华章"
+  canonical={archivesUrl}
+  jsonLd={archivesSchema}
+/>

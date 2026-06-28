@@ -1,0 +1,78 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import FadeInSection from '../effects/FadeInSection.astro';
+import InkDivider from '../decorations/InkDivider.astro';
+import { getYMD } from '../../utils/date';
+import { getPostURL, getFullURL } from '../../utils/url';
+
+interface Props {
+	posts: CollectionEntry<'published'>[];
+}
+
+const { posts } = Astro.props;
+---
+
+<section class="py-24 md:py-32">
+	<FadeInSection>
+		<div class="flex items-start gap-4 mb-10">
+		<InkDivider orientation="vertical" height="48" />
+		<div>
+			<h2
+				class="text-3xl md:text-4xl font-black font-serif text-ink"
+			>
+				近作
+			</h2>
+		</div>
+		</div>
+	</FadeInSection>
+
+	<div>
+		{posts.length === 0 ? (
+			<FadeInSection>
+				<p class="text-sm text-center py-12 text-ink-light/65">
+					卷中未有成文，静待笔墨新篇
+				</p>
+			</FadeInSection>
+		) : (
+			posts.map((post, index) => (
+				<FadeInSection>
+					<article class="py-6 flex gap-6 items-start">
+						<!-- 左侧：日期 -->
+						<time
+							class="text-sm font-mono shrink-0 pt-1 text-ink-light/65"
+						>
+							{getYMD(post.data.createTime)}
+						</time>
+
+						<!-- 右侧：标题 + 描述（左对齐） -->
+						<div class="flex-1 min-w-0">
+							<a
+								href={getPostURL(post.data.slug)}
+								class="text-lg md:text-xl font-medium link-hover block text-ink"
+							>
+								{post.data.title}
+							</a>
+							<p
+								class="text-sm mt-2 max-w-lg leading-relaxed text-ink-light/70"
+							>
+								{post.data.description || '简记阙失，未有一言总述其事'}
+							</p>
+						</div>
+					</article>
+					{index < posts.length - 1 && (
+						<InkDivider orientation="horizontal" width="100%" />
+					)}
+				</FadeInSection>
+			))
+		)}
+	</div>
+
+	<FadeInSection class="mt-6 text-right">
+		<a
+			href={getFullURL('', 'archives.html', '')}
+			class="text-sm inline-flex items-center gap-1 link-hover text-ink-light"
+		>
+			全撰 <span class="font-mono">→</span>
+		</a>
+	</FadeInSection>
+</section>
