@@ -37,7 +37,7 @@
 │   │   ├── decorations/      # 装饰组件：Seal、InkDivider、BrushIcon、ThemeToggleSeal
 │   │   ├── effects/          # 动效：FadeInSection、PaperBackground
 │   │   └── sections/         # 页面区块：Navbar、Hero、RecentPosts、Contact、Footer
-│   ├── content/              # 内容数据
+│   ├── content/              # 内容数据（仅占位；权威内容在 my-vault 的 src-content/，部署时整体被软链接管，勿在本仓库增删文章）
 │   │   ├── categories.yaml   # 分类定义
 │   │   ├── tags.yaml         # 标签定义
 │   │   ├── drafts/           # 草稿目录（被 TypeScript 与 gitignore 排除）
@@ -129,6 +129,8 @@ pnpm preview
 - 输出为纯静态站点，构建产物位于 `dist/`。
 - 生产环境目标域名为 `https://www.yycrazy.net`（配置于 `astro.config.mjs`）。
 - 将 `dist/` 上传至任意静态托管服务（如 Vercel、Cloudflare Pages、GitHub Pages、Nginx 等）即可。
+- **实际生产部署**由同级仓库 `my-vault/` 的脚本完成（Ubuntu 部署机）：`update-my-notes.sh` 将本仓库强制对齐远端 main/master 并放弃全部本地变更，`build.sh` 随后在本地 `build` 分支上软链绑定内容、安装依赖（`--frozen-lockfile`）并构建。流程与运维纪律详见 my-vault 的 README.md。
+- **build 分支与预期 git 状态**：部署态下本仓库处于本地 `build` 分支（随每次更新丢弃重建，不向 main/master 同步）；`src/content`、`public/robots.txt` 与 `src/assets/images/` 下若干子目录被 my-vault 软链接管，`git status` 会长期显示"跟踪文件被删除 + 未跟踪软链"——这是**预期状态**，切勿用 `git checkout -- .`、`git restore` 等手段"修复"，否则会破坏软链绑定。
 
 ## 安全注意事项
 
